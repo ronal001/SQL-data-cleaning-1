@@ -36,3 +36,67 @@ CREATE TABLE club_member_info_cleaned (
 INSERT INTO club_member_info_cleaned 
 SELECT * FROM club_member_info;
 ```
+
+## 3. Cleaning data
+Delete space 
+```sql
+UPDATE club_member_info_cleaned 
+SET 	
+	full_name = TRIM(full_name )
+	,age = TRIM(age )
+	,martial_status = TRIM(martial_status )
+	,email = TRIM(email )
+	,phone = TRIM(phone )
+	,full_address = TRIM(full_address ) 
+	,job_title  = TRIM(job_title )
+	,membership_date = TRIM(membership_date );
+```
+
+
+convert the name column to lowercase and capitalize the first letter of each name
+```sql
+UPDATE club_member_info_cleaned 
+SET full_name = LOWER(full_name );
+
+UPDATE club_member_info_cleaned  
+SET full_name  = UPPER(SUBSTR(full_name,1,1)) || LOWER(SUBSTR(full_name,2)); 
+```
+
+
+Check whether there are any ages greater than 100 or NULL.
+If there are, replace them with the MEAN value.
+Export the age column to a CSV file (readable by Excel).
+Use the MEDIAN function to calculate the median value ⇒ MEDIAN = 40.
+```sql
+
+```
+
+
+
+
+Checking duplicate values
+
+
+
+
+
+Checking if there is any age over 100
+```sql
+SELECT * FROM club_member_info_cleaned 
+WHERE age > 100
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```
