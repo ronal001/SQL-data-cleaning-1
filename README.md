@@ -38,7 +38,7 @@ SELECT * FROM club_member_info;
 ```
 
 ## 3. Cleaning data
-Delete space 
+3.1 Delete space 
 ```sql
 UPDATE club_member_info_cleaned 
 SET 	
@@ -53,7 +53,7 @@ SET
 ```
 
 
-convert the name column to lowercase and capitalize the first letter of each name
+3.2 Convert the name column to lowercase and capitalize the first letter of each name
 ```sql
 UPDATE club_member_info_cleaned 
 SET full_name = LOWER(full_name );
@@ -63,32 +63,115 @@ SET full_name  = UPPER(SUBSTR(full_name,1,1)) || LOWER(SUBSTR(full_name,2));
 ```
 
 
-Check whether there are any ages greater than 100 or NULL.
+3.3 Check whether there are any ages greater than 100 or NULL.
 If there are, replace them with the MEAN value.
 Export the age column to a CSV file (readable by Excel).
-Use the MEDIAN function to calculate the median value ⇒ MEDIAN = 40.
-```sql
-
-```
-
-
-
-
-Checking duplicate values
-
-
-
-
-
-Checking if there is any age over 100
+Use the MEDIAN function to calculate the median value ⇒ MEDIAN = 40
+Create a log table
+to store the rows that will be updated
+and perform the update.
 ```sql
 SELECT * FROM club_member_info_cleaned 
-WHERE age > 100
+WHERE age > 100 or age IS NULL;
+
+SELECT age from club_member_info_cleaned;
+
+CREATE TABLE club_member_info_cleaned_log AS
+SELECT * FROM club_member_info_cleaned 
+WHERE 1 = 0;
+
+INSERT INTO club_member_info_cleaned_log 
+SELECT * FROM club_member_info_cleaned 
+WHERE age > 100 OR age IS NULL;
+
+UPDATE club_member_info_cleaned 
+SET age = 40 
+WHERE age > 100 OR age IS NULL;
 ```
 
 
+3.4 Cleaning duplicate values
+	3.4.1 Cheking duplicate values
+```sql
+SELECT 
+	full_name 
+	,age 
+	,martial_status 
+	,email 
+	,phone 
+	,full_address 
+	,job_title 
+	,membership_date 
+	,COUNT(*) AS duplicated_value
+FROM club_member_info_cleaned 
+GROUP BY
+	full_name 
+	,age 
+	,martial_status 
+	,email 
+	,phone 
+	,full_address 
+	,job_title 
+	,membership_date 
+HAVING COUNT(*) > 1;
+```
+	3.4.2 Create a temporary table containing unique values
+```sql
+Create a temporary table containing unique values
+CREATE TABLE club_member_info_cleaned_unique AS
+SELECT 
+	full_name 
+	,age 
+	,martial_status 
+	,email 
+	,phone 
+	,full_address 
+	,job_title 
+	,membership_date	
+FROM club_member_info_cleaned 
+GROUP BY 
+	full_name 
+	,age 
+	,martial_status 
+	,email 
+	,phone 
+	,full_address 
+	,job_title 
+	,membership_date;
+```
 
+	3.4.3 Check whether this temporary table contains duplicate values
+```sql
+SELECT 
+	full_name 
+	,age 
+	,martial_status 
+	,email 
+	,phone 
+	,full_address 
+	,job_title 
+	,membership_date 
+	,COUNT(*) AS duplicated_value
+FROM club_member_info_cleaned_unique  
+GROUP BY
+	full_name 
+	,age 
+	,martial_status 
+	,email 
+	,phone 
+	,full_address 
+	,job_title 
+	,membership_date 
+HAVING COUNT(*) > 1;
+```
 
+	3.4.4 Delete the old table and rename the temporary table containing unique values to the old table’s name.
+```sql
+DROP TABLE club_member_info_cleaned;
+
+ALTER TABLE club_member_info_cleaned_unique 
+RENAME TO club_member_info_cleaned;
+```
 
 
 
