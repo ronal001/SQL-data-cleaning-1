@@ -38,7 +38,7 @@ SELECT * FROM club_member_info;
 ```
 
 ## 3. Cleaning data
-3.1 Delete space 
+### 3.1 Delete space 
 ```sql
 UPDATE club_member_info_cleaned 
 SET 	
@@ -53,7 +53,7 @@ SET
 ```
 
 
-3.2 Convert the name column to lowercase and capitalize the first letter of each name
+### 3.2 Converting the name column to lowercase and capitalize the first letter of each name
 ```sql
 UPDATE club_member_info_cleaned 
 SET full_name = LOWER(full_name );
@@ -63,7 +63,7 @@ SET full_name  = UPPER(SUBSTR(full_name,1,1)) || LOWER(SUBSTR(full_name,2));
 ```
 
 
-3.3 Check whether there are any ages greater than 100 or NULL.
+### 3.3 Checking whether there are any ages greater than 100 or NULL.
 If there are, replace them with the MEAN value.
 Export the age column to a CSV file (readable by Excel).
 Use the MEDIAN function to calculate the median value ⇒ MEDIAN = 40
@@ -90,8 +90,8 @@ WHERE age > 100 OR age IS NULL;
 ```
 
 
-3.4 Cleaning duplicate values
-	3.4.1 Cheking duplicate values
+### 3.4 Cleaning duplicate values
+#### 3.4.1 Cheking duplicate values
 ```sql
 SELECT 
 	full_name 
@@ -115,7 +115,7 @@ GROUP BY
 	,membership_date 
 HAVING COUNT(*) > 1;
 ```
-	3.4.2 Create a temporary table containing unique values
+#### 3.4.2 Creating a temporary table containing unique values
 ```sql
 Create a temporary table containing unique values
 CREATE TABLE club_member_info_cleaned_unique AS
@@ -140,7 +140,7 @@ GROUP BY
 	,membership_date;
 ```
 
-	3.4.3 Check whether this temporary table contains duplicate values
+#### 3.4.3 Checking whether this temporary table contains duplicate values
 ```sql
 SELECT 
 	full_name 
@@ -165,7 +165,7 @@ GROUP BY
 HAVING COUNT(*) > 1;
 ```
 
-	3.4.4 Delete the old table and rename the temporary table containing unique values to the old table’s name.
+#### 3.4.4 Deleting the old table and rename the temporary table containing unique values to the old table’s name.
 ```sql
 DROP TABLE club_member_info_cleaned;
 
@@ -173,13 +173,84 @@ ALTER TABLE club_member_info_cleaned_unique
 RENAME TO club_member_info_cleaned;
 ```
 
-
-
-
-
-
-
-
-
-
+### 3.5 Checking for spelling errors and missing data in the martial_status column
+#### 3.5.1 Checking
+```sql
+SELECT martial_status  FROM club_member_info_cleaned 
+WHERE 
+	martial_status NOT IN ('divorced','single','married')
+OR  martial_status IS NULL;
 ```
+
+#### 3.5.2 Creating a temporary table
+```sql
+CREATE  TABLE martial_status_log AS 
+SELECT martial_status  FROM club_member_info_cleaned 
+WHERE 
+	martial_status NOT IN ('divorced','single','married')
+OR  martial_status IS NULL;
+```
+
+#### 3.5.3 Replacing incorrect text values with the correct ones and update NULL entries with 'marked_null'
+```sql
+UPDATE  club_member_info_cleaned 
+SET martial_status = CASE
+	WHEN martial_status = 'divored' THEN 'divorced'
+	WHEN martial_status IS NULL OR martial_status = ''    THEN 'marked_null'
+END
+WHERE martial_status = 'divored' OR martial_status IS NULL OR martial_status = '';
+```
+
+### 3.6 Checking NULL or empty values in the remaining columns
+#### 3.6.1 Checking
+```sql
+SELECT *
+FROM club_member_info_cleaned 
+WHERE 
+	email IS NULL OR email ='' OR
+	phone IS NULL OR phone ='' OR
+	full_address IS NULL OR full_address ='' OR
+	job_title IS NULL OR job_title ='' OR
+	membership_date IS NULL OR membership_date ='';	
+```
+
+#### 3.6.2 Creating a temporary table
+```sql
+CREATE TABLE log AS
+SELECT 
+	phone
+	,job_title
+FROM club_member_info_cleaned 
+WHERE
+	phone IS NULL OR phone ='' OR
+	job_title IS NULL OR job_title ='';
+```
+
+#### 3.6.3 Replacing NULL or empty values in the phone and job_title columns with 'unknown' and 'not provided'
+```sql
+UPDATE club_member_info_cleaned 
+SET
+	phone = 'unknown' 
+	,job_title = 'not provided' 
+WHERE
+	phone IS NULL OR phone ='' OR
+	job_title IS NULL OR job_title = '';
+```
+#### 3.6.4 Verify the results again
+```sql
+SELECT 
+	phone
+	,job_title 
+FROM club_member_info_cleaned 
+WHERE 
+	phone = 'unknown' OR 
+	job_title = 'not provided'; 
+```
+
+### 3.7 Checking the date format in the membership_date column
+```sql
+SELECT membership_date
+FROM club_member_info_cleaned
+WHERE DATE(membership_date) IS NULL;
+```
+
